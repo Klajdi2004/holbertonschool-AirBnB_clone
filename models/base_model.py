@@ -1,53 +1,54 @@
 #!/usr/bin/python3
-""" Module for Base """
+"""
+Parent class that will inherit
+"""
+
 
 import uuid
 from datetime import datetime
-from uuid import uuid4
-import models
-import json
-
-format_dt = "%Y-%m-%dT%H:%M:%S.%f"
 
 
 class BaseModel:
-    """ Basemodel class """
+    """Defines all common attributes/methods
+    """
+
     def __init__(self, *args, **kwargs):
-        """ Initialization of Database """
-        if args is not None and len(args) > 0:
-            pass
-        if kwargs:
-            for key, item in kwargs.items():
-                if key in ['created_at', 'updated_at']:
-                    item = datetime.strptime(item, format_dt)
-                if key not in ['__class__']:
-                    setattr(self, key, item)
-        else:
+        """Initializes all attributes
+        """
+        from models import storage
+        if not kwargs:
             self.id = str(uuid.uuid4())
-            self.created_at = self.updated_at = datetime.now()
-            models.storage.new(self)
-
-    def to_dict(self):
-        """ to_dict definition """
-        
-        dic = {}
-        for key, item in self.__dict__.items():
-            if key in ['created_at', 'updated_at']:
-                dic[key] = item
-
-        dic['__class__'] = self.__class__.__name__
-        dic['created_at'] = self.created_at.isoformat()
-        dic['updated_at'] = self.updated_at.isoformat()
-        return dic
-
+            self.created_at = datetime.now()
+            self.updated_at = self.created_at
+            storage.new(self)
+        else:
+            for key, value in kwargs.items():
+                if key == 'created_at' or key == 'updated_at':
+                    if type(value) is str:
+                        """checks for all parsed datetime variables"""
+                        value = datetime.strptime(
+                            value, "%Y-%m-%dT%H:%M:%S.%f")
+                if key != '__class__':
+                    setattr(self, key, value)
 
     def __str__(self):
-        """ str definition """
-        return("[{}] ({}) {}".format(self.__class__.__name__,
-                                     self.id, self.__dict__))
+        """
+        method for named
+        """
+        nameClass = self.__class__.__name__
+        return ("[{}] ({}) {}".format(nameClass, self.id, self.__dict__))
 
     def save(self):
-        """ Save definition """
+        """updates last update time
+        """
+        from models import storage
         self.updated_at = datetime.now()
-        models.storage.new(self)
-        models.storage.save()
+        storage.save()
+
+    def to_dict(self):
+        """ Returns dict with all keys/values of __dict__ of the instance"""
+        my_dict = self.__dict__.copy()
+        my_dict["created_at"] = my_dict["created_at"].isoformat()
+        my_dict["updated_at"] = my_dict["updated_at"].isoformat()
+        my_dict["__class__"] = self.__class__.__name__
+        return my_dict

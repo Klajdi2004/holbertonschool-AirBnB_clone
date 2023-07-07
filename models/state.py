@@ -1,12 +1,11 @@
 #!/usr/bin/python3
-""" State class """
+"""
+class state for put the name
+"""
 
-import uuid
-from datetime import datetime
-from models import storage
 from models.base_model import BaseModel
 
 
 class State(BaseModel):
-    """ State class """
+    """class to create a state"""
     name = ""
